@@ -1,0 +1,13 @@
+{
+  "name": "angular-rule",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@markuplint/ml-core": "^4.8.2"
+  },
+  "devDependencies": {
+    "markuplint": "^4.9.2",
+    "typescript": "^5.5.3"
+  }
+}
