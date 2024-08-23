@@ -1,12 +1,22 @@
 {
-  "name": "angular-rule",
+  "name": "markuplint-angular-control-flow-visitor",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "lib",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "build:watch": "tsc --watch"
   },
   "dependencies": {
-    "@markuplint/ml-core": "^4.8.2"
+    "@angular/compiler": "^18.1.2",
+    "@markuplint/ml-core": "^4.8.2",
+    "jsdom": "^24.1.1",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
+    "@types/node": "^20.14.12",
+    "@types/jsdom": "^21.1.7",
+    "@types/lodash": "^4.17.7",
     "markuplint": "^4.9.2",
     "typescript": "^5.5.3"
   }

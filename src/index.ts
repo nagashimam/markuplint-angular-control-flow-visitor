@@ -1,13 +1,13 @@
 import { createPlugin } from "@markuplint/ml-core";
 
-import { angularRule } from "./rules/angular-rule.js";
+import { controlFlowVisitor } from "./rules/index.js";
 
 export default createPlugin({
-  name: "markuplint-angular-rule",
-  create(settings) {
+  name: "markuplint-angular-control-flow-visitor",
+  create(settings: any) {
     return {
       rules: {
-        "angular-rule": angularRule(settings),
+        "control-flow-visitor": controlFlowVisitor(settings),
       },
     };
   },
