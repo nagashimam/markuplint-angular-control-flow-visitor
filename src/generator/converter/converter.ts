@@ -87,11 +87,13 @@ const convertAstElementToDomNode = (
   originalLocations.addToList(astElement);
 
   astElement.attributes.forEach((attribute) => {
-    element.setAttribute(attribute.name, attribute.value);
+    // Markuplint throws error for illegal characters in template
+    element.setAttribute(attribute.name.replaceAll("$", ""), attribute.value);
     originalLocations.addToList(attribute);
   });
   astElement.inputs.forEach((input) => {
-    element.setAttribute(input.name, "some random text");
+    // Markuplint throws error for illegal characters in template
+    element.setAttribute(input.name.replaceAll("$", ""), "some random text");
     originalLocations.addToList(input);
   });
 
