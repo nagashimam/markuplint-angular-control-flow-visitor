@@ -6,22 +6,9 @@ import { OriginalLocations } from "../generator/converter/converter.js";
 export async function execAgainstEachFragment(
   fragment: Fragment,
   context: Context,
+  config: Config,
 ): Promise<void> {
   const { document, report } = context;
-  const config: Config = {
-    extends: ["markuplint:recommended"],
-    nodeRules: [
-      {
-        regexSelector: {
-          attrName: "/^app.*$/",
-        },
-        rules: {
-          "invalid-attr": false,
-        },
-      },
-    ],
-  };
-
   const file = await MLEngine.toMLFile({ sourceCode: fragment.htmlFragment });
   if (!file) {
     report({
@@ -59,7 +46,6 @@ const estimateOriginalLocation = (
    */
   const candidates = findOriginalLocationCandidates(raw, originalLocations);
   candidates.sort((candidate) => Math.abs(line - candidate.line));
-  candidates.forEach((candidate) => console.log(candidate.line));
   return candidates[0];
 };
 

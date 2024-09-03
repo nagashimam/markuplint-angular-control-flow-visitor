@@ -1,18 +1,23 @@
-import type { CreatePluginSettings } from "@markuplint/ml-core";
 import fs from "fs";
 import { createRule } from "@markuplint/ml-core";
 import { execAgainstEachFragment } from "../../executor/index.js";
 import { generateFragmentsFromTemplateFile } from "../../generator/index.js";
 import { MainValue, Options, Context, Verify } from "../../types.js";
+import type { Config } from "@markuplint/ml-config";
 
-export const controlFlowVisitor = (_settings: CreatePluginSettings) =>
+export const controlFlowVisitor = (config: Config) =>
   createRule<MainValue, Options>({
     defaultSeverity: "error",
     defaultValue: "__DEFAULT_MAIN_VALUE__",
-    verify,
+    verify: verifyFactory(config),
   });
 
-const verify: Verify = async (context: Context) => {
+const verifyFactory =
+  (config: Config): Verify =>
+  async (context: Context) =>
+    await verify(context, config);
+
+const verify = async (context: Context, config: Config) => {
   const { document, report } = context;
 
   if (!document.filename) {
@@ -34,6 +39,6 @@ const verify: Verify = async (context: Context) => {
   const fragments = generateFragmentsFromTemplateFile(document.filename);
   for (const fragment of fragments) {
     // each invocation has to be awaited for exec to complete normally
-    await execAgainstEachFragment(fragment, context);
+    await execAgainstEachFragment(fragment, context, config);
   }
 };
