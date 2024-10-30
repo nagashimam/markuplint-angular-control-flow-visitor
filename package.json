@@ -1,6 +1,6 @@
 {
   "name": "markuplint-angular-control-flow-visitor",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "type": "module",
   "main": "lib/index.js",
   "scripts": {
