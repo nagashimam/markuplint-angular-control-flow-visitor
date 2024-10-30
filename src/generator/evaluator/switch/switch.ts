@@ -1,6 +1,6 @@
 import {
   ParsedTemplate,
-  TmplAstElement,
+  TmplAstNode,
   TmplAstSwitchBlock,
   tmplAstVisitAll,
 } from "@angular/compiler";
@@ -21,18 +21,31 @@ export class SwitchBlockEvaluator extends BlockEvaluator {
         return this.evaluatedTemplates;
       }
 
-      const counter = new SwitchBlockBranchCounter();
-      tmplAstVisitAll(counter, templateToEvaluate.nodes);
+      const modifier = new SwitchBlockModifier();
+      const topLevelSwitchPatterns = modifier.getModificationPatterns(
+        templateToEvaluate.nodes,
+      );
+      if (topLevelSwitchPatterns) {
+        topLevelSwitchPatterns.forEach((pattern) => {
+          const workTemplate = _.cloneDeep(templateToEvaluate);
+          workTemplate.nodes = pattern;
+          this.templatesToEvaluate.push(workTemplate);
+        });
+      } else {
+        const counter = new SwitchBlockBranchCounter();
+        tmplAstVisitAll(counter, templateToEvaluate.nodes);
 
-      const count = counter.count;
-      if (count === 0) {
-        this.evaluatedTemplates.push(templateToEvaluate);
-      }
+        const count = counter.count;
+        if (count === 0) {
+          this.evaluatedTemplates.push(templateToEvaluate);
+        }
 
-      for (let i = 0; i < count; i++) {
-        const workTemplate = _.cloneDeep(templateToEvaluate);
-        tmplAstVisitAll(new SwitchBlockModifier(i), workTemplate.nodes);
-        this.templatesToEvaluate.push(workTemplate);
+        for (let i = 0; i < count; i++) {
+          modifier.evaluateAt = i;
+          const workTemplate = _.cloneDeep(templateToEvaluate);
+          tmplAstVisitAll(modifier, workTemplate.nodes);
+          this.templatesToEvaluate.push(workTemplate);
+        }
       }
     }
   }
@@ -46,28 +59,22 @@ class SwitchBlockBranchCounter extends Counter {
 }
 
 class SwitchBlockModifier extends Modifier {
-  private evaluateAt: number;
-  constructor(evaluateAt: number) {
-    super();
-    this.evaluateAt = evaluateAt;
-  }
-  override visitElement(element: TmplAstElement) {
-    const result = this.findFromChild<TmplAstSwitchBlock>(element);
-    if (result) {
-      const { block, index } = result;
-      this._hasFound = true;
-      const oldChildren = element.children;
-      const newChildren = [
-        ...oldChildren.splice(0, index),
-        ...block.cases[this.evaluateAt].children,
-        ...oldChildren.splice(index + 1),
-      ];
-      element.children = newChildren;
-    } else {
-      super.visitElement(element);
+  override getModificationPatterns(
+    nodes: TmplAstNode[],
+  ): TmplAstNode[][] | undefined {
+    const switchBlock = this.searchFromNodes<TmplAstSwitchBlock>(nodes);
+    if (!switchBlock) {
+      return;
     }
+
+    return switchBlock.block.cases.map((eachCase) => [
+      ...nodes.splice(0, switchBlock.index),
+      ...eachCase.children,
+      ...nodes.splice(switchBlock.index + 1),
+    ]);
   }
-  override isInstanceOfBlock(element: TmplAstElement) {
-    return element instanceof TmplAstSwitchBlock;
+
+  override isInstanceOfBlock(node: TmplAstNode) {
+    return node instanceof TmplAstSwitchBlock;
   }
 }

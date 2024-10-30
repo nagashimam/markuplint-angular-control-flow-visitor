@@ -1,8 +1,7 @@
 import {
   ParsedTemplate,
-  TmplAstElement,
   TmplAstForLoopBlock,
-  TmplAstForLoopBlockEmpty,
+  TmplAstNode,
   tmplAstVisitAll,
 } from "@angular/compiler";
 import _ from "lodash";
@@ -22,83 +21,84 @@ export class ForBlockEvaluator extends BlockEvaluator {
         return this.evaluatedTemplates;
       }
 
-      const finder = new ForBlockFinder();
-      tmplAstVisitAll(finder, templateToEvaluate.nodes);
-
-      if (finder.hasFound) {
-        this.evaluateLoop(0, templateToEvaluate);
-        this.evaluateLoop(1, templateToEvaluate);
+      const modifier = new ForBlockModifier();
+      const topLevelForPatterns = modifier.getModificationPatterns(
+        templateToEvaluate.nodes,
+      );
+      if (topLevelForPatterns) {
+        topLevelForPatterns.forEach((pattern) => {
+          const workTemplate = _.cloneDeep(templateToEvaluate);
+          workTemplate.nodes = pattern;
+          this.templatesToEvaluate.push(workTemplate);
+        });
       } else {
-        this.evaluatedTemplates.push(templateToEvaluate);
+        const finder = new ForBlockFinder();
+        tmplAstVisitAll(finder, templateToEvaluate.nodes);
+        if (finder.hasFound) {
+          modifier.evaluateAt = 0;
+          this.evaluateLoop(modifier, templateToEvaluate);
+          modifier.evaluateAt = 1;
+          this.evaluateLoop(modifier, templateToEvaluate);
+        } else {
+          this.evaluatedTemplates.push(templateToEvaluate);
+        }
       }
     }
   }
 
   private evaluateLoop(
-    loopCount: 0 | 1,
+    modifier: ForBlockModifier,
     templateToEvaluate: ParsedTemplate,
   ): void {
     const workTemplate = _.cloneDeep(templateToEvaluate);
-    tmplAstVisitAll(new ForBlockModifier(loopCount), workTemplate.nodes);
+    tmplAstVisitAll(modifier, workTemplate.nodes);
     this.templatesToEvaluate.push(workTemplate);
   }
 }
 
 class ForBlockFinder extends Finder {
-  override visitForLoopBlock(_block: TmplAstForLoopBlock): void {
+  override visitForLoopBlock(): void {
     this._hasFound = true;
   }
 }
 
 class ForBlockModifier extends Modifier {
-  constructor(private loopCount: 0 | 1) {
-    super();
-  }
-
-  override visitElement(element: TmplAstElement): void {
-    const res = this.findFromChild<TmplAstForLoopBlock>(element);
-    if (res) {
-      const { block, index } = res;
-      this._hasFound = true;
-      switch (this.loopCount) {
-        case 0:
-          this.noLoop(element, index);
-        case 1:
-          this.loopOnce(element, block, index);
-      }
-    } else {
-      super.visitElement(element);
+  override getModificationPatterns(
+    nodes: TmplAstNode[],
+  ): TmplAstNode[][] | undefined {
+    const forLoopBlock = this.searchFromNodes<TmplAstForLoopBlock>(nodes);
+    if (!forLoopBlock) {
+      return undefined;
     }
+
+    return [
+      this.noLoop(nodes, forLoopBlock.block, forLoopBlock.index),
+      this.loopOnce(nodes, forLoopBlock.block, forLoopBlock.index),
+    ];
   }
 
-  private noLoop(element: TmplAstElement, index: number): void {
-    const oldChildren = element.children;
-    const emptyBlock = this.findFromChild<TmplAstForLoopBlockEmpty>(element);
-    const block = emptyBlock?.block?.children ?? [];
-
-    const newChildren = [
-      ...oldChildren.splice(0, index),
-      ...block,
-      ...oldChildren.splice(index + 1),
-    ];
-    element.children = newChildren;
+  private noLoop(
+    nodes: TmplAstNode[],
+    forLoopBlock: TmplAstForLoopBlock,
+    index: number,
+  ): TmplAstNode[] {
+    const block = forLoopBlock.empty?.children ?? [];
+    return [...nodes.splice(0, index), ...block, ...nodes.splice(index + 1)];
   }
 
   private loopOnce(
-    element: TmplAstElement,
+    nodes: TmplAstNode[],
     forLoopBlock: TmplAstForLoopBlock,
     index: number,
-  ): void {
-    const oldChildren = element.children;
-    const newChildren = [
-      ...oldChildren.splice(0, index),
+  ): TmplAstNode[] {
+    return [
+      ...nodes.splice(0, index),
       ...forLoopBlock.children,
-      ...oldChildren.splice(index + 1),
+      ...nodes.splice(index + 1),
     ];
-    element.children = newChildren;
   }
 
-  protected isInstanceOfBlock(element: TmplAstElement): boolean {
-    return element instanceof TmplAstForLoopBlock;
+  protected isInstanceOfBlock(node: TmplAstNode): boolean {
+    return node instanceof TmplAstForLoopBlock;
   }
 }

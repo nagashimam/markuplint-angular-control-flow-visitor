@@ -2,6 +2,7 @@ import {
   ParsedTemplate,
   TmplAstElement,
   TmplAstIfBlock,
+  TmplAstNode,
   tmplAstVisitAll,
 } from "@angular/compiler";
 import _ from "lodash";
@@ -21,18 +22,31 @@ export class IfBlockEvaluator extends BlockEvaluator {
         return this.evaluatedTemplates;
       }
 
-      const counter = new IfBlockBranchCounter();
-      tmplAstVisitAll(counter, templateToEvaluate.nodes);
+      const modifier = new IfBlockModifier();
+      const topLevelIfPatterns = modifier.getModificationPatterns(
+        templateToEvaluate.nodes,
+      );
+      if (topLevelIfPatterns) {
+        topLevelIfPatterns.forEach((pattern) => {
+          const workTemplate = _.cloneDeep(templateToEvaluate);
+          workTemplate.nodes = pattern;
+          this.templatesToEvaluate.push(workTemplate);
+        });
+      } else {
+        const counter = new IfBlockBranchCounter();
+        tmplAstVisitAll(counter, templateToEvaluate.nodes);
 
-      const count = counter.count;
-      if (count === 0) {
-        this.evaluatedTemplates.push(templateToEvaluate);
-      }
+        const count = counter.count;
+        if (count === 0) {
+          this.evaluatedTemplates.push(templateToEvaluate);
+        }
 
-      for (let i = 0; i < count; i++) {
-        const workTemplate = _.cloneDeep(templateToEvaluate);
-        tmplAstVisitAll(new IfBlockModifier(i), workTemplate.nodes);
-        this.templatesToEvaluate.push(workTemplate);
+        for (let i = 0; i < count; i++) {
+          const workTemplate = _.cloneDeep(templateToEvaluate);
+          modifier.evaluateAt = i;
+          tmplAstVisitAll(modifier, workTemplate.nodes);
+          this.templatesToEvaluate.push(workTemplate);
+        }
       }
     }
   }
@@ -46,26 +60,19 @@ class IfBlockBranchCounter extends Counter {
 }
 
 class IfBlockModifier extends Modifier {
-  private evaluateAt: number;
-  constructor(evaluateAt: number) {
-    super();
-    this.evaluateAt = evaluateAt;
-  }
-  override visitElement(element: TmplAstElement) {
-    const result = this.findFromChild<TmplAstIfBlock>(element);
-    if (result) {
-      const { block, index } = result;
-      this._hasFound = true;
-      const oldChildren = element.children;
-      const newChildren = [
-        ...oldChildren.splice(0, index),
-        ...block.branches[this.evaluateAt].children,
-        ...oldChildren.splice(index + 1),
-      ];
-      element.children = newChildren;
-    } else {
-      super.visitElement(element);
+  override getModificationPatterns(
+    nodes: TmplAstNode[],
+  ): TmplAstNode[][] | undefined {
+    const ifBlock = this.searchFromNodes<TmplAstIfBlock>(nodes);
+    if (!ifBlock) {
+      return undefined;
     }
+
+    return ifBlock.block.branches.map((branch) => [
+      ...nodes.splice(0, ifBlock.index),
+      ...branch.children,
+      ...nodes.splice(ifBlock.index + 1),
+    ]);
   }
   override isInstanceOfBlock(element: TmplAstElement) {
     return element instanceof TmplAstIfBlock;
