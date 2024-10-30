@@ -1,4 +1,4 @@
-import { TmplAstElement, TmplAstNode } from "@angular/compiler";
+import { TmplAstElement, TmplAstForLoopBlock, TmplAstForLoopBlockEmpty, TmplAstIfBlock, TmplAstIfBlockBranch, TmplAstNode, TmplAstSwitchBlock, TmplAstSwitchBlockCase } from "@angular/compiler";
 import { Finder } from "../finder/index.js";
 
 export abstract class Modifier extends Finder {
@@ -15,6 +15,46 @@ export abstract class Modifier extends Finder {
       element.children = patterns[this._evaluateAt];
     } else {
       super.visitElement(element);
+    }
+  }
+
+  override visitForLoopBlock(block: TmplAstForLoopBlock): void {
+    const patterns = this.getModificationPatterns(block.children);
+    if (patterns) {
+      this._hasFound = true;
+      block.children = patterns[this._evaluateAt];
+    } else {
+      super.visitForLoopBlock(block);
+    }
+  }
+  
+  override visitForLoopBlockEmpty(block: TmplAstForLoopBlockEmpty): void {
+    const patterns = this.getModificationPatterns(block.children);
+    if (patterns) {
+      this._hasFound = true;
+      block.children = patterns[this._evaluateAt];
+    } else {
+      super.visitForLoopBlockEmpty(block);
+    }
+  }
+
+  override  visitSwitchBlockCase(block: TmplAstSwitchBlockCase): void {
+    const patterns = this.getModificationPatterns(block.children);
+    if (patterns) {
+      this._hasFound = true;
+      block.children = patterns[this._evaluateAt];
+    } else {
+      super.visitSwitchBlockCase(block);
+    }
+  }
+
+  override visitIfBlockBranch(block: TmplAstIfBlockBranch): void {
+    const patterns = this.getModificationPatterns(block.children);
+    if (patterns) {
+      this._hasFound = true;
+      block.children = patterns[this._evaluateAt];
+    } else {
+      super.visitIfBlockBranch(block);
     }
   }
 

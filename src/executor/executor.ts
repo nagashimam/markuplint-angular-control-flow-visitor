@@ -65,6 +65,5 @@ const findOriginalLocationCandidates = (
       });
     }
   }
-  console.log(`raw not found from file:${raw}`);
   return [{ line: 1, col: 1 }];
 };
