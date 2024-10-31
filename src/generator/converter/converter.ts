@@ -1,8 +1,10 @@
 import {
+  ASTWithSource,
   Comment,
   ParsedTemplate,
   ParseLocation,
   ParseSourceFile,
+  PropertyRead,
   TmplAstBoundAttribute,
   TmplAstBoundText,
   TmplAstElement,
@@ -12,6 +14,12 @@ import {
 } from "@angular/compiler";
 import jsdom from "jsdom";
 import { Fragment } from "../../types.js";
+import { existsSync, readFileSync } from "node:fs";
+import {
+  parse,
+  AST_NODE_TYPES,
+  TSESTree,
+} from "@typescript-eslint/typescript-estree";
 
 export class OriginalLocations {
   private locations = new Map<string, ParseLocation[]>();
@@ -92,8 +100,13 @@ const convertAstElementToDomNode = (
     originalLocations.addToList(attribute);
   });
   astElement.inputs.forEach((input) => {
+    const boundVariableName = (
+      (input?.value as ASTWithSource | undefined)?.ast as
+        | PropertyRead
+        | undefined
+    )?.name;
     // Markuplint throws error for illegal characters in template
-    element.setAttribute(input.name.replaceAll("$", ""), "some random text");
+    element.setAttribute(input.name.replaceAll("$", ""), retrieveBoundValueFromComponentTS(input) || boundVariableName || "some random text");
     originalLocations.addToList(input);
   });
 
@@ -125,5 +138,42 @@ const convertAstCommentToDomNode = (
 ): Node | undefined => {
   if (astComment.value) {
     return document.createComment(astComment.value);
+  }
+};
+
+const retrieveBoundValueFromComponentTS = (input: TmplAstBoundAttribute):string | undefined => {
+  const componentFile = input.sourceSpan.start.file.url.replace(".html", ".ts");
+  if (existsSync(componentFile)) {
+    const code = readFileSync(componentFile, { encoding: "utf8" });
+    const ast = parse(code, {
+      loc: true,
+      range: true,
+    });
+
+    const namedExport: TSESTree.ExportNamedDeclaration | undefined =
+      ast.body.find(
+        (body) =>
+          body.type === AST_NODE_TYPES.ExportNamedDeclaration &&
+          body.declaration?.type === AST_NODE_TYPES.ClassDeclaration &&
+          body.declaration?.id?.name.includes("Component"),
+      ) as TSESTree.ExportNamedDeclaration | undefined;
+    const classDeclaration: TSESTree.ClassDeclaration | undefined =
+      namedExport?.declaration as TSESTree.ClassDeclaration | undefined;
+    const classBody = classDeclaration?.body;
+    const propertyDefinition = classBody?.body?.find(
+      (node) =>
+        node.type === AST_NODE_TYPES.PropertyDefinition &&
+        node.key.type === AST_NODE_TYPES.Identifier &&
+        (node.key as TSESTree.Identifier).name ===
+          (
+            (input?.value as ASTWithSource | undefined)?.ast as
+              | PropertyRead
+              | undefined
+          )?.name,
+    ) as TSESTree.PropertyDefinition | undefined;
+
+    if(propertyDefinition?.value?.type === AST_NODE_TYPES.Literal){
+      return (propertyDefinition.value as TSESTree.Literal | undefined)?.value as string;
+    }
   }
 };

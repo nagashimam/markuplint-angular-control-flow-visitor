@@ -1,6 +1,6 @@
 {
   "name": "markuplint-angular-control-flow-visitor",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "type": "module",
   "main": "lib/index.js",
   "scripts": {
@@ -10,6 +10,7 @@
   "dependencies": {
     "@angular/compiler": "^18.1.2",
     "@markuplint/ml-core": "^4.8.2",
+    "@typescript-eslint/typescript-estree": "^8.12.2",
     "jsdom": "^24.1.1",
     "lodash": "^4.17.21"
   },

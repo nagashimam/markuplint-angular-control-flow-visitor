@@ -1,4 +1,13 @@
-import { TmplAstElement, TmplAstForLoopBlock, TmplAstForLoopBlockEmpty, TmplAstIfBlock, TmplAstIfBlockBranch, TmplAstNode, TmplAstSwitchBlock, TmplAstSwitchBlockCase } from "@angular/compiler";
+import {
+  TmplAstElement,
+  TmplAstForLoopBlock,
+  TmplAstForLoopBlockEmpty,
+  TmplAstIfBlock,
+  TmplAstIfBlockBranch,
+  TmplAstNode,
+  TmplAstSwitchBlock,
+  TmplAstSwitchBlockCase,
+} from "@angular/compiler";
 import { Finder } from "../finder/index.js";
 
 export abstract class Modifier extends Finder {
@@ -27,7 +36,7 @@ export abstract class Modifier extends Finder {
       super.visitForLoopBlock(block);
     }
   }
-  
+
   override visitForLoopBlockEmpty(block: TmplAstForLoopBlockEmpty): void {
     const patterns = this.getModificationPatterns(block.children);
     if (patterns) {
@@ -38,7 +47,7 @@ export abstract class Modifier extends Finder {
     }
   }
 
-  override  visitSwitchBlockCase(block: TmplAstSwitchBlockCase): void {
+  override visitSwitchBlockCase(block: TmplAstSwitchBlockCase): void {
     const patterns = this.getModificationPatterns(block.children);
     if (patterns) {
       this._hasFound = true;
