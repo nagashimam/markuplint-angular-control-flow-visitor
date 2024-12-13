@@ -65,9 +65,6 @@ class ForBlockFinder extends Finder {
 }
 
 class ForBlockModifier extends Modifier {
-  override visitElement(element: TmplAstElement): void {
-    super.visitElement(element);
-  }
   override getModificationPatterns(
     nodes: TmplAstNode[],
   ): TmplAstNode[][] | undefined {

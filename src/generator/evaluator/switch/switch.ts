@@ -54,6 +54,9 @@ export class SwitchBlockEvaluator extends BlockEvaluator {
 
 class SwitchBlockBranchCounter extends Counter {
   visitSwitchBlock(block: TmplAstSwitchBlock) {
+    if (this._hasFound) {
+      return;
+    }
     this._hasFound = true;
     this._count = block.cases.length;
   }

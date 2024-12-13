@@ -15,6 +15,9 @@ export abstract class Modifier extends Finder {
   }
 
   override visitElement(element: TmplAstElement): void {
+    if (this._hasFound) {
+      return;
+    }
     // The number of times getModificationPatterns will be called is equal to element.children.length. If it takes too much time, we have to consider caching the return value of getModificationPatterns
     const patterns = this.getModificationPatterns(element.children);
     if (patterns) {
@@ -26,6 +29,9 @@ export abstract class Modifier extends Finder {
   }
 
   override visitForLoopBlock(block: TmplAstForLoopBlock): void {
+    if (this._hasFound) {
+      return;
+    }
     const patterns = this.getModificationPatterns(block.children);
     if (patterns) {
       this._hasFound = true;
@@ -36,6 +42,9 @@ export abstract class Modifier extends Finder {
   }
 
   override visitForLoopBlockEmpty(block: TmplAstForLoopBlockEmpty): void {
+    if (this._hasFound) {
+      return;
+    }
     const patterns = this.getModificationPatterns(block.children);
     if (patterns) {
       this._hasFound = true;
@@ -46,6 +55,9 @@ export abstract class Modifier extends Finder {
   }
 
   override visitSwitchBlockCase(block: TmplAstSwitchBlockCase): void {
+    if (this._hasFound) {
+      return;
+    }
     const patterns = this.getModificationPatterns(block.children);
     if (patterns) {
       this._hasFound = true;
@@ -56,6 +68,9 @@ export abstract class Modifier extends Finder {
   }
 
   override visitIfBlockBranch(block: TmplAstIfBlockBranch): void {
+    if (this._hasFound) {
+      return;
+    }
     const patterns = this.getModificationPatterns(block.children);
     if (patterns) {
       this._hasFound = true;

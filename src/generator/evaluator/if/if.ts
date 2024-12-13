@@ -55,15 +55,15 @@ export class IfBlockEvaluator extends BlockEvaluator {
 
 class IfBlockBranchCounter extends Counter {
   visitIfBlock(block: TmplAstIfBlock) {
+    if(this._hasFound){
+      return;
+    }
     this._hasFound = true;
     this._count = block.branches.length;
   }
 }
 
 class IfBlockModifier extends Modifier {
-  override visitElement(element: TmplAstElement): void {
-    super.visitElement(element);
-  }
   override getModificationPatterns(
     nodes: TmplAstNode[],
   ): TmplAstNode[][] | undefined {
