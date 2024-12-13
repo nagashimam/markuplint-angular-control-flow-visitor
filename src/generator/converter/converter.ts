@@ -100,13 +100,19 @@ const convertAstElementToDomNode = (
     originalLocations.addToList(attribute);
   });
   astElement.inputs.forEach((input) => {
-    const boundVariableName = (
-      (input?.value as ASTWithSource | undefined)?.ast as
-        | PropertyRead
-        | undefined
-    )?.name;
+    const astValue = input.value as ASTWithSource;
+    const boundVariableName = (astValue.ast as PropertyRead | undefined)?.name;
+    const boundVariableSource = astValue.source;
+    // check keySpan.details first to match [class.___] or [attr.____] input directive.
+    const attrName: string = input?.keySpan?.details || input?.value.toString();
+    const attrValue =
+      retrieveBoundValueFromComponentTS(input) ||
+      boundVariableName ||
+      boundVariableSource ||
+      "some random text";
+
     // Markuplint throws error for illegal characters in template
-    element.setAttribute(input.name.replaceAll("$", ""), retrieveBoundValueFromComponentTS(input) || boundVariableName || "some random text");
+    element.setAttribute(attrName.replaceAll("$", ""), attrValue);
     originalLocations.addToList(input);
   });
 
@@ -141,7 +147,9 @@ const convertAstCommentToDomNode = (
   }
 };
 
-const retrieveBoundValueFromComponentTS = (input: TmplAstBoundAttribute):string | undefined => {
+const retrieveBoundValueFromComponentTS = (
+  input: TmplAstBoundAttribute,
+): string | undefined => {
   const componentFile = input.sourceSpan.start.file.url.replace(".html", ".ts");
   if (existsSync(componentFile)) {
     const code = readFileSync(componentFile, { encoding: "utf8" });
@@ -172,8 +180,9 @@ const retrieveBoundValueFromComponentTS = (input: TmplAstBoundAttribute):string 
           )?.name,
     ) as TSESTree.PropertyDefinition | undefined;
 
-    if(propertyDefinition?.value?.type === AST_NODE_TYPES.Literal){
-      return (propertyDefinition.value as TSESTree.Literal | undefined)?.value as string;
+    if (propertyDefinition?.value?.type === AST_NODE_TYPES.Literal) {
+      return (propertyDefinition.value as TSESTree.Literal | undefined)
+        ?.value as string;
     }
   }
 };
