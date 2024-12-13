@@ -1,7 +1,7 @@
-import { TmplAstElement, TmplAstForLoopBlock, TmplAstForLoopBlockEmpty, TmplAstIfBlockBranch, TmplAstNode, TmplAstSwitchBlockCase } from "@angular/compiler";
+import type { TmplAstElement, TmplAstForLoopBlock, TmplAstForLoopBlockEmpty, TmplAstIfBlockBranch, TmplAstNode, TmplAstSwitchBlockCase } from "@angular/compiler";
 import { Finder } from "../finder/index.js";
 export declare abstract class Modifier extends Finder {
-    protected _evaluateAt: number;
+    _evaluateAt: number;
     set evaluateAt(evaluateAt: number);
     visitElement(element: TmplAstElement): void;
     visitForLoopBlock(block: TmplAstForLoopBlock): void;

@@ -5,7 +5,7 @@ import {
   TmplAstNode,
   tmplAstVisitAll,
 } from "@angular/compiler";
-import _ from "lodash";
+import _, { sum } from "lodash";
 import { BlockEvaluator, Evaluator } from "../shared/base-evaluator/index.js";
 import { Counter } from "../shared/visitor/counter/index.js";
 import { Modifier } from "../shared/visitor/modifier/index.js";
@@ -42,9 +42,10 @@ export class IfBlockEvaluator extends BlockEvaluator {
         }
 
         for (let i = 0; i < count; i++) {
+          const newModifier = new IfBlockModifier();
           const workTemplate = _.cloneDeep(templateToEvaluate);
-          modifier.evaluateAt = i;
-          tmplAstVisitAll(modifier, workTemplate.nodes);
+          newModifier.evaluateAt = i;
+          tmplAstVisitAll(newModifier, workTemplate.nodes);
           this.templatesToEvaluate.push(workTemplate);
         }
       }
@@ -60,6 +61,9 @@ class IfBlockBranchCounter extends Counter {
 }
 
 class IfBlockModifier extends Modifier {
+  override visitElement(element: TmplAstElement): void {
+    super.visitElement(element);
+  }
   override getModificationPatterns(
     nodes: TmplAstNode[],
   ): TmplAstNode[][] | undefined {
@@ -69,9 +73,9 @@ class IfBlockModifier extends Modifier {
     }
 
     return ifBlock.block.branches.map((branch) => [
-      ...nodes.splice(0, ifBlock.index),
+      ...nodes.slice(0, ifBlock.index),
       ...branch.children,
-      ...nodes.splice(ifBlock.index + 1),
+      ...nodes.slice(ifBlock.index + 1),
     ]);
   }
   override isInstanceOfBlock(element: TmplAstElement) {

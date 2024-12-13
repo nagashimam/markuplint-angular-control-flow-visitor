@@ -41,9 +41,10 @@ export class SwitchBlockEvaluator extends BlockEvaluator {
         }
 
         for (let i = 0; i < count; i++) {
-          modifier.evaluateAt = i;
+          const newModifier = new SwitchBlockModifier();
+          newModifier.evaluateAt = i;
           const workTemplate = _.cloneDeep(templateToEvaluate);
-          tmplAstVisitAll(modifier, workTemplate.nodes);
+          tmplAstVisitAll(newModifier, workTemplate.nodes);
           this.templatesToEvaluate.push(workTemplate);
         }
       }
