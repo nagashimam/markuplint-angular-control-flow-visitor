@@ -1,6 +1,5 @@
 import {
   ParsedTemplate,
-  TmplAstElement,
   TmplAstForLoopBlock,
   TmplAstNode,
   tmplAstVisitAll,
@@ -85,7 +84,7 @@ class ForBlockModifier extends Modifier {
     index: number,
   ): TmplAstNode[] {
     const block = forLoopBlock.empty?.children ?? [];
-    return [...nodes.splice(0, index), ...block, ...nodes.splice(index + 1)];
+    return [...nodes.slice(0, index), ...block, ...nodes.slice(index + 1)];
   }
 
   private loopOnce(
@@ -94,9 +93,9 @@ class ForBlockModifier extends Modifier {
     index: number,
   ): TmplAstNode[] {
     return [
-      ...nodes.splice(0, index),
+      ...nodes.slice(0, index),
       ...forLoopBlock.children,
-      ...nodes.splice(index + 1),
+      ...nodes.slice(index + 1),
     ];
   }
 
