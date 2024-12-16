@@ -44,7 +44,9 @@ export class OriginalLocations {
 
 export const convertParsedTemplatesToHTMLFragments = (
   parsedTemplates: ParsedTemplate[],
-): Fragment[] => parsedTemplates.map(convertParsedTemplateToHTMLFragment);
+): Fragment[] => {
+  return parsedTemplates.map(convertParsedTemplateToHTMLFragment);
+};
 
 const convertParsedTemplateToHTMLFragment = (
   parsedTemplate: ParsedTemplate,
@@ -96,7 +98,10 @@ const convertAstElementToDomNode = (
 
   astElement.attributes.forEach((attribute) => {
     // Markuplint throws error for illegal characters in template
-    element.setAttribute(attribute.name.replaceAll("$", ""), attribute.value);
+    element.setAttribute(
+      attribute.name.replaceAll(/[$@]/, ""),
+      attribute.value,
+    );
     originalLocations.addToList(attribute);
   });
   astElement.inputs.forEach((input) => {
@@ -112,7 +117,7 @@ const convertAstElementToDomNode = (
       "some random text";
 
     // Markuplint throws error for illegal characters in template
-    element.setAttribute(attrName.replaceAll("$", ""), attrValue);
+    element.setAttribute(attrName.replaceAll(/[$@]/, ""), attrValue);
     originalLocations.addToList(input);
   });
 
