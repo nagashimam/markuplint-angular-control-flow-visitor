@@ -21,15 +21,21 @@ export async function execAgainstEachFragment(
   const engine = new MLEngine(file, { config, ignoreExt: true });
   const result = await engine.exec();
   result?.violations?.forEach((violation) => {
+    let raw = violation.raw;
+    if (!violation.raw) {
+      // raw値が空きの場合、raw値を手動設定（The "___" attribute must not be empty）
+      const attribute = violation.message.match(/"([^"]+)"/i);
+      raw = attribute ? attribute[1] : "";
+    }
     const { line, col } = estimateOriginalLocation(
-      violation.raw,
+      raw,
       violation.line,
       fragment.originalLocations,
     );
     report({
       line,
       col,
-      raw: violation.raw,
+      raw,
       message: `${violation.message} (${violation.ruleId})`,
     });
   });
