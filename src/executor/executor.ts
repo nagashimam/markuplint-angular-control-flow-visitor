@@ -70,7 +70,7 @@ const findOriginalLocationCandidates = (
     if (matchedLines?.length > 0) {
       return matchedLines.map((matchedLine) => {
         const line = lines.indexOf(matchedLine) + 1;
-        const col = matchedLine.search(/\S/) + 1;
+        const col = matchedLine.search(raw) + 1;
         return { line, col };
       });
     }
