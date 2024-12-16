@@ -72,9 +72,9 @@ class SwitchBlockModifier extends Modifier {
     }
 
     return switchBlock.block.cases.map((eachCase) => [
-      ...nodes.splice(0, switchBlock.index),
+      ...nodes.slice(0, switchBlock.index),
       ...eachCase.children,
-      ...nodes.splice(switchBlock.index + 1),
+      ...nodes.slice(switchBlock.index + 1),
     ]);
   }
 

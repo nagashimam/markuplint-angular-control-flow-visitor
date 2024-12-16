@@ -5,7 +5,7 @@ import {
   TmplAstNode,
   tmplAstVisitAll,
 } from "@angular/compiler";
-import _, { sum } from "lodash";
+import _ from "lodash";
 import { BlockEvaluator, Evaluator } from "../shared/base-evaluator/index.js";
 import { Counter } from "../shared/visitor/counter/index.js";
 import { Modifier } from "../shared/visitor/modifier/index.js";
@@ -55,7 +55,7 @@ export class IfBlockEvaluator extends BlockEvaluator {
 
 class IfBlockBranchCounter extends Counter {
   visitIfBlock(block: TmplAstIfBlock) {
-    if(this._hasFound){
+    if (this._hasFound) {
       return;
     }
     this._hasFound = true;
