@@ -22,7 +22,11 @@ export abstract class Modifier extends Finder {
     const patterns = this.getModificationPatterns(element.children);
     if (patterns) {
       this._hasFound = true;
-      element.children = patterns[this._evaluateAt];
+      const pattern = patterns[this._evaluateAt];
+      if (pattern) {
+        element.children = pattern;
+        return;
+      }
     } else {
       super.visitElement(element);
     }

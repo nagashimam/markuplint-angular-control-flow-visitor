@@ -37,9 +37,12 @@ export class ForBlockEvaluator extends BlockEvaluator {
         if (finder.hasFound) {
           modifier.evaluateAt = 0;
           this.evaluateLoop(modifier, templateToEvaluate);
-          const newModifier = new ForBlockModifier();
-          newModifier.evaluateAt = 1;
-          this.evaluateLoop(newModifier, templateToEvaluate);
+
+          if (!modifier.hasCheckedEmpty) {
+            const newModifier = new ForBlockModifier();
+            newModifier.evaluateAt = 1;
+            this.evaluateLoop(newModifier, templateToEvaluate);
+          }
         } else {
           this.evaluatedTemplates.push(templateToEvaluate);
         }
@@ -64,6 +67,11 @@ class ForBlockFinder extends Finder {
 }
 
 class ForBlockModifier extends Modifier {
+  private _hasCheckedEmpty = false;
+  get hasCheckedEmpty() {
+    return this._hasCheckedEmpty;
+  }
+
   override getModificationPatterns(
     nodes: TmplAstNode[],
   ): TmplAstNode[][] | undefined {
@@ -72,10 +80,15 @@ class ForBlockModifier extends Modifier {
       return undefined;
     }
 
-    return [
-      this.noLoop(nodes, forLoopBlock.block, forLoopBlock.index),
-      this.loopOnce(nodes, forLoopBlock.block, forLoopBlock.index),
-    ];
+    const hasCheckedEmpty = (forLoopBlock.block as any).hasCheckedEmpty;
+    this._hasCheckedEmpty = hasCheckedEmpty;
+
+    return hasCheckedEmpty
+      ? [this.loopOnce(nodes, forLoopBlock.block, forLoopBlock.index)]
+      : [
+          this.noLoop(nodes, forLoopBlock.block, forLoopBlock.index),
+          this.loopOnce(nodes, forLoopBlock.block, forLoopBlock.index),
+        ];
   }
 
   private noLoop(
