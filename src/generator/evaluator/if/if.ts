@@ -1,6 +1,7 @@
 import {
   ParsedTemplate,
   TmplAstElement,
+  TmplAstForLoopBlock,
   TmplAstIfBlock,
   TmplAstNode,
   tmplAstVisitAll,
@@ -9,6 +10,7 @@ import _ from "lodash";
 import { BlockEvaluator, Evaluator } from "../shared/base-evaluator/index.js";
 import { Counter } from "../shared/visitor/counter/index.js";
 import { Modifier } from "../shared/visitor/modifier/index.js";
+import { Finder } from "../shared/visitor/finder/finder.js";
 
 export class IfBlockEvaluator extends BlockEvaluator {
   constructor(evaluator: Evaluator) {
@@ -55,11 +57,38 @@ export class IfBlockEvaluator extends BlockEvaluator {
 
 class IfBlockBranchCounter extends Counter {
   visitIfBlock(block: TmplAstIfBlock) {
+    const firstLine = block.sourceSpan.toString().split("\n")[0];
+    const emptyCheckTarget = firstLine
+      .replaceAll(" ", "")
+      .replaceAll(/@if\((.*)\.length>0\).*/g, "$1");
     if (this._hasFound) {
       return;
     }
     this._hasFound = true;
     this._count = block.branches.length;
+
+    block.branches.forEach((branch) => {
+      tmplAstVisitAll(
+        new ForBlockEmptyCheckFinder(emptyCheckTarget),
+        branch.children,
+      );
+    });
+  }
+}
+
+class ForBlockEmptyCheckFinder extends Finder {
+  constructor(private emptyCheckTarget: string) {
+    super();
+  }
+
+  visitForLoopBlock(block: TmplAstForLoopBlock): void {
+    if (block.expression.source === this.emptyCheckTarget) {
+      (block as any).hasCheckedEmpty = true;
+    }
+    if (this._hasFound) {
+      return;
+    }
+    super.visitForLoopBlock(block);
   }
 }
 
