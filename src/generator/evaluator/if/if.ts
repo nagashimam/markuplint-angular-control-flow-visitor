@@ -60,7 +60,6 @@ const markEmptyCheck = (block: TmplAstIfBlock): void => {
 	const emptyCheckTarget = firstLine
 		.replaceAll(" ", "")
 		.replaceAll(/@if\((.*)\.length(>[^-]?\d+)?\).*/g, "$1");
-	console.log(emptyCheckTarget);
 	block.branches.forEach((branch) => {
 		tmplAstVisitAll(
 			new ForBlockEmptyCheckFinder(emptyCheckTarget),
