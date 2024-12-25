@@ -123,6 +123,7 @@ const convertAstElementToDomNode = (
 			boundVariableSource ||
 			"some random text";
 		const attrValue = rawAttrValue
+			.toString() // rawAttrValue could be number
 			.replace(/.*\?(.*?):.*/, "$1") // flag ? "truth" : "falsy"
 			.replaceAll(" ", "")
 			.replaceAll("'", "")
