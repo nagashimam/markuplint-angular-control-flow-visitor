@@ -117,11 +117,16 @@ const convertAstElementToDomNode = (
 			.replaceAll("@", "data-visitor-animation-") // treat @animationTriger as custom attribute
 			.replaceAll(/(class)\..*/g, "$1") // evaluate `[class.XXX]="flag"` as `class="flag"`
 			.replace("attr.", ""); // evaluate `[attr.XXX]="foo"` as `XXX="foo"`
-		const attrValue =
+		const rawAttrValue =
 			retrieveBoundValueFromComponentTS(input) ||
 			boundVariableName ||
 			boundVariableSource ||
 			"some random text";
+		const attrValue = rawAttrValue
+			.replace(/.*\?(.*?):.*/, "$1") // flag ? "truth" : "falsy"
+			.replaceAll(" ", "")
+			.replaceAll("'", "")
+			.replaceAll('"', "");
 
 		element.setAttribute(attrName, attrValue);
 		originalLocations.addToList(input);
