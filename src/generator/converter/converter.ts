@@ -119,8 +119,10 @@ const convertAstElementToDomNode = (
 			.replace("attr.", ""); // evaluate `[attr.XXX]="foo"` as `XXX="foo"`
 		const rawAttrValue =
 			retrieveBoundValueFromComponentTS(input) ||
-			boundVariableName ||
+			// source for [id]="obj.key" is obj.key and name is key.
+			// if name is prioritized, id duplication cannot be properly checked
 			boundVariableSource ||
+			boundVariableName ||
 			"some random text";
 		const attrValue = rawAttrValue
 			.toString() // rawAttrValue could be number
